@@ -100,7 +100,8 @@ public class CarController : MonoBehaviour
         RaycastHit hit;
         float sensor = 0;
         bool striked = false;
-        if (striked = Physics.Raycast(r, out hit))
+        int layer_mask = LayerMask.GetMask("Barrier");
+        if (striked = Physics.Raycast(r, out hit,float.MaxValue,layer_mask))
         {
             
             //Debug.Log(hit.distance, hit.rigidbody);
