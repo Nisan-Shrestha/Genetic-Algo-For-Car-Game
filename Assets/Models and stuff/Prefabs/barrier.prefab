@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 465890}
   - component: {fileID: 3325390}
   - component: {fileID: 2308292}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: model
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -93,7 +93,7 @@ GameObject:
   m_Component:
   - component: {fileID: 416294}
   - component: {fileID: 6567252}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: barrier
   m_TagString: Untagged
   m_Icon: {fileID: 0}

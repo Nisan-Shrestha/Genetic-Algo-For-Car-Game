@@ -7,7 +7,7 @@ using Random = UnityEngine.Random;
 
 public class NeuralNet : MonoBehaviour
 {
-    public Matrix<float> input = Matrix<float>.Build.Dense(1, 5);
+    public Matrix<float> input = Matrix<float>.Build.Dense(1, 7);
     public List<Matrix<float>> hiddenLayers = new List<Matrix<float>>();
     public Matrix<float> output = Matrix<float>.Build.Dense(1, 5);
     public List<Matrix<float>> weights = new List<Matrix<float>>();
@@ -29,7 +29,7 @@ public class NeuralNet : MonoBehaviour
             biases.Add(Random.Range(-1f, 1f));
             if (i == 0)
             {
-                Matrix<float> inputLayerToFirstHiddenLayer = Matrix<float>.Build.Dense(5, countHiddenNeurons);
+                Matrix<float> inputLayerToFirstHiddenLayer = Matrix<float>.Build.Dense(7, countHiddenNeurons);
                 weights.Add(inputLayerToFirstHiddenLayer);
             }
             Matrix<float> hiddenLayerToHiddenLayer = Matrix<float>.Build.Dense(countHiddenNeurons, countHiddenNeurons);
@@ -46,16 +46,18 @@ public class NeuralNet : MonoBehaviour
         for (int i = 0; i < weights.Count; i++)
             for (int x = 0; x < weights[i].RowCount; x++)
                 for (int y = 0; y < weights[i].ColumnCount; y++)
-                    weights[i][x, y] = Random.Range(-1f, 1f);
+                    weights[i][x, y] = Random.Range(-100f, 100f);
     }
 
-    public (float, float, float, float, float) Run (float a, float b, float c, float d, float e)
+    public (float, float, float, float, float) Run (float a, float b, float c, float d, float e, float speed, float angularVelocityY)
     {
         input[0, 0] = a;
         input[0, 1] = b;
         input[0, 2] = c;
         input[0, 3] = d;
         input[0, 4] = e;
+        input[0, 5] = speed;
+        input[0, 6] = angularVelocityY;
         input = input.PointwiseTanh();
         hiddenLayers[0] = ((input * weights[0]) + biases[0]).PointwiseTanh();
         for (int i = 1; i < hiddenLayers.Count; i++)

@@ -1,3 +1,4 @@
+using MathNet.Numerics;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,6 +15,8 @@ public class CarController : MonoBehaviour
 
     private float horizontalInput;
     private float verticalInput;
+    private float speed;
+    private float angularVelocityY;
     private float currentSteerAngle;
     private float currentbreakForce;
     private bool isBreaking;
@@ -32,7 +35,9 @@ public class CarController : MonoBehaviour
     [SerializeField] private Transform rearLeftWheelTransform;
     [SerializeField] private Transform rearRightWheelTransform;
 
-    private float sensorA, sensorB, sensorC, sensorD, sensorE;
+    private Rigidbody myRB;
+
+    private float sensorL, sensorFL, sensorF, sensorFR, sensorR;
 
     public int HiddenLayerCount = 1;
     public int HiddenNeuronCount = 10;
@@ -44,6 +49,12 @@ public class CarController : MonoBehaviour
         network = GetComponent<NeuralNet>();
 
         network.Init(HiddenLayerCount, HiddenNeuronCount);
+    }
+
+    private void Start()
+    {
+        myRB= this.GetComponent<Rigidbody>();
+        myRB.centerOfMass -= new Vector3(0, .2f, 0);
     }
 
     private void FixedUpdate()
@@ -61,17 +72,27 @@ public class CarController : MonoBehaviour
     {
         ComputeSensors();
 
-        const float threshold = 0.05f;
+        const float turnThreshold = 0.25f;
+        const float motorThreshold = 0.25f;
+        const float brakeThreshold = 0.25f;
+
+        speed = myRB.velocity.magnitude;
+        angularVelocityY = myRB.angularVelocity.y;
+
         float left, right, forwards, backwards, brake;
-        (left, right, forwards, backwards, brake) = network.Run(sensorA, sensorB, sensorC, sensorD, sensorE);
+        (left, right, forwards, backwards, brake) = network.Run(sensorL, sensorFL, sensorF, sensorFR, sensorR, speed,angularVelocityY);
+        
+        isBreaking = brake > brakeThreshold;
+        horizontalInput = (Math.Abs(left - right) < turnThreshold) ? 0 : ((left - right) > 0) ? -1 : 1;
+        verticalInput   = (Math.Abs(backwards - forwards) < motorThreshold) ? 0 : ( (backwards- forwards) > 0) ? -1 : 1;
+        Debug.Log(left + " " + right + " " + forwards + " " + backwards + " " + brake);
 
         //horizontalInput = (right > threshold ? 1 : 0) - (left > threshold ? 1 : 0);
         //verticalInput = (forwards > threshold ? 1 : 0) - (backwards > threshold ? 1 : 0);
-        //isBreaking = brake > threshold;
-        horizontalInput = (right  - left) > 0 ? 1 : -1;
-        verticalInput = (forwards - backwards) > 0 ? 1 : -1;
+        //
+        //horizontalInput = (right  - left) > 0 ? 1 : -1;
+        //verticalInput = (forwards - backwards) > 0 ? 1 : -1;
         //verticalInput = (forwards > threshold ? 1 : 0) - (backwards > threshold ? 1 : 0);
-        isBreaking = brake > threshold;
     }
 
     (bool, float) RaySensor(Ray r)
@@ -81,6 +102,8 @@ public class CarController : MonoBehaviour
         bool striked = false;
         if (striked = Physics.Raycast(r, out hit))
         {
+            
+            //Debug.Log(hit.distance, hit.rigidbody);
             sensor = hit.distance / 50;  // need to test this value, done to normalize between 0 and 1
             Debug.DrawLine(r.origin, hit.point, Color.red);
         }
@@ -105,16 +128,16 @@ public class CarController : MonoBehaviour
         bool striked;
         float sensorVal;
 
-        (striked, sensorVal) = RaySensor(new Ray(transform.position, a));
-        sensorA = striked ? sensorVal : sensorA;
-        (striked, sensorVal) = RaySensor(new Ray(transform.position, a));
-        sensorB = striked ? sensorVal : sensorB;
-        (striked, sensorVal) = RaySensor(new Ray(transform.position, a));
-        sensorC = striked ? sensorVal : sensorC;
-        (striked, sensorVal) = RaySensor(new Ray(transform.position, a));
-        sensorD = striked ? sensorVal : sensorD;
-        (striked, sensorVal) = RaySensor(new Ray(transform.position, a));
-        sensorE = striked ? sensorVal : sensorE;
+        (striked, sensorVal) = RaySensor(new Ray(transform.position + transform.up * .7f , a));
+        sensorL = striked ? sensorVal : sensorL;
+        (striked, sensorVal) = RaySensor(new Ray(transform.position + transform.up * .7f, b));
+        sensorFL = striked ? sensorVal : sensorFL;
+        (striked, sensorVal) = RaySensor(new Ray(transform.position + transform.up * .7f, c));
+        sensorF = striked ? sensorVal : sensorF;
+        (striked, sensorVal) = RaySensor(new Ray(transform.position + transform.up * .7f, d));
+        sensorFR = striked ? sensorVal : sensorFR;
+        (striked, sensorVal) = RaySensor(new Ray(transform.position + transform.up * .7f, e));
+        sensorR = striked ? sensorVal : sensorR;
     }
 
     private void GetInput()
@@ -127,8 +150,8 @@ public class CarController : MonoBehaviour
 
     private void HandleMotor()
     {
-        rearLeftWheelCollider.motorTorque = verticalInput * motorForce;
-        rearRightWheelCollider.motorTorque = verticalInput * motorForce;
+        frontLeftWheelCollider.motorTorque = verticalInput * motorForce;
+        frontRightWheelCollider.motorTorque = verticalInput * motorForce;
         currentbreakForce = isBreaking ? breakForce : 0f;
         ApplyBreaking();
     }
