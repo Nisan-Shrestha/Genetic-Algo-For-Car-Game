@@ -21,6 +21,8 @@ public class CarController : MonoBehaviour
     private float currentbreakForce;
     private bool isBreaking;
 
+    private Transform[] waypoints;
+
     [SerializeField] private float motorForce;
     [SerializeField] private float breakForce;
     [SerializeField] private float maxSteerAngle;
@@ -55,6 +57,14 @@ public class CarController : MonoBehaviour
     {
         myRB= this.GetComponent<Rigidbody>();
         myRB.centerOfMass -= new Vector3(0, .2f, 0);
+
+        var Gc = FindObjectOfType<GameController>();
+        while (Gc.waypoints.Length == 0) ;
+        waypoints = Gc.waypoints;
+
+        for (int i = 0; i < waypoints.Length; i++)
+            Debug.Log(waypoints[i].position);
+        
     }
 
     private void FixedUpdate()
