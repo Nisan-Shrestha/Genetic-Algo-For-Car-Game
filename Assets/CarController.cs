@@ -85,7 +85,7 @@ public class CarController : MonoBehaviour
         isBreaking = brake > brakeThreshold;
         horizontalInput = (Math.Abs(left - right) < turnThreshold) ? 0 : ((left - right) > 0) ? -1 : 1;
         verticalInput   = (Math.Abs(backwards - forwards) < motorThreshold) ? 0 : ( (backwards- forwards) > 0) ? -1 : 1;
-        Debug.Log(left + " " + right + " " + forwards + " " + backwards + " " + brake);
+        //Debug.Log(left + " " + right + " " + forwards + " " + backwards + " " + brake);
 
         //horizontalInput = (right > threshold ? 1 : 0) - (left > threshold ? 1 : 0);
         //verticalInput = (forwards > threshold ? 1 : 0) - (backwards > threshold ? 1 : 0);
