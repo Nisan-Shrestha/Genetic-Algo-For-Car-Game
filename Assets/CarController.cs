@@ -62,8 +62,8 @@ public class CarController : MonoBehaviour
         while (Gc.waypoints.Length == 0) ;
         waypoints = Gc.waypoints;
 
-        for (int i = 0; i < waypoints.Length; i++)
-            Debug.Log(waypoints[i].position);
+//        for (int i = 0; i < waypoints.Length; i++)
+            //Debug.Log(waypoints[i].position);
         
     }
 
@@ -82,9 +82,9 @@ public class CarController : MonoBehaviour
     {
         ComputeSensors();
 
-        const float turnThreshold = 0.25f;
-        const float motorThreshold = 0.25f;
-        const float brakeThreshold = 0.25f;
+        const float turnThreshold = 0.05f;
+        const float motorThreshold = .05f;
+        const float brakeThreshold = 0.6f;
 
         speed = myRB.velocity.magnitude;
         angularVelocityY = myRB.angularVelocity.y;
@@ -95,6 +95,7 @@ public class CarController : MonoBehaviour
         isBreaking = brake > brakeThreshold;
         horizontalInput = (Math.Abs(left - right) < turnThreshold) ? 0 : ((left - right) > 0) ? -1 : 1;
         verticalInput   = (Math.Abs(backwards - forwards) < motorThreshold) ? 0 : ( (backwards- forwards) > 0) ? -1 : 1;
+        //Debug.Log(horizontalInput + " " + isBreaking + " " + verticalInput );
         //Debug.Log(left + " " + right + " " + forwards + " " + backwards + " " + brake);
 
         //horizontalInput = (right > threshold ? 1 : 0) - (left > threshold ? 1 : 0);

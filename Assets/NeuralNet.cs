@@ -46,7 +46,10 @@ public class NeuralNet : MonoBehaviour
         for (int i = 0; i < weights.Count; i++)
             for (int x = 0; x < weights[i].RowCount; x++)
                 for (int y = 0; y < weights[i].ColumnCount; y++)
+                {
                     weights[i][x, y] = Random.Range(-100f, 100f);
+                    //Debug.Log(weights[i][x, y]);
+                }
     }
 
     public (float, float, float, float, float) Run (float a, float b, float c, float d, float e, float speed, float angularVelocityY)
