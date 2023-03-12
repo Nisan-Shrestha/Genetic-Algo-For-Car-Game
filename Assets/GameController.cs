@@ -1,15 +1,17 @@
 using MathNet.Numerics.LinearAlgebra;
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.SocialPlatforms.Impl;
-using static Unity.VisualScripting.Metadata;
+using Random = UnityEngine.Random;
 
 public class GameController : MonoBehaviour
 {
     [SerializeField] public WayPoints[] waypoints;
     [SerializeField] public WayPoints startingPoint;
-    
+
+    [SerializeField] public float crossoverProbability = 0.1f;
+
     public int numCars = 25;
 
     public int HiddenLayerCount = 3;
@@ -25,12 +27,10 @@ public class GameController : MonoBehaviour
     
     private int naturallySelected = 0;
 
-    public int bestAgentSelection = 8;
-    public int worstAgentSelection = 3;
-    public int crossOverCount = 10;
-
-    private List<int> genePool = new List<int>();
-
+    [Range(0, 100)]
+    public int bestSelectionPercentage = 20;
+    //public int crossOverPopulationPercentage = 10;
+    
     [Range(5.0f, 120.0f)]
     public float LifeTime = 30.0f;
 
@@ -50,10 +50,6 @@ public class GameController : MonoBehaviour
             //cars[i].transform.position = startingPoint.transform.position;
         }
         startTime = Time.time;
-        //for (int i = 0; i < waypoints.Length; i++)
-        //{
-        //    Debug.Log(waypoints[i]);
-        //}
     }
 
     private void RandomizePopulation(NeuralNet[] newPopulation, int startingIndex)
@@ -72,7 +68,8 @@ public class GameController : MonoBehaviour
         for (int i = 0; i < pointsToMutateCount; i++) {
             int randomRow = Random.Range(0, result.RowCount);
             int randomColumn = Random.Range(0, result.ColumnCount);
-            result[randomRow, randomColumn] = Mathf.Clamp(result[randomRow, randomColumn] + Random.Range(-1f, 1f), -1f, 1f);
+            if (Random.Range(0.0f, 1.0f) < mutationRate)
+                result[randomRow, randomColumn] = Mathf.Clamp(result[randomRow, randomColumn] + Random.Range(-1f, 1f) , -500f, 500f);
         }
         return result;
     }
@@ -81,9 +78,7 @@ public class GameController : MonoBehaviour
     {
         for (int i = 0; i < naturallySelected; i++) {
             for (int c = 0; c < newPopulation[i].weights.Count; c++) {
-                if (Random.Range(0.0f, 1.0f) < mutationRate) {
-                    newPopulation[i].weights[c] = MutateMatrix(newPopulation[i].weights[c]);
-                }
+                newPopulation[i].weights[c] = MutateMatrix(newPopulation[i].weights[c]);
             }
         }
     }
@@ -91,25 +86,14 @@ public class GameController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //var cars_to_delete = cars.FindAll(x => x.GetComponent<CarController>().dead == true);
-        //cars.RemoveAll(x => x.GetComponent<CarController>().dead == true);
-        //if(cars.Count > 0 )
-        //    Debug.Log(cars_to_delete.Count);
-
-        // repopulate if all are either dead or have exceeded their lifetime
-
         if ((Time.time - startTime >= LifeTime) || (cars.FindAll(x => x.GetComponent<CarController>().dead == true).Count == numCars))
-        {
             Repopulate();
-        }
-
     }
 
 
     private void Repopulate()
     {
         startTime = Time.time;
-        genePool.Clear();
         currentGeneration++;
         naturallySelected = 0;
 
@@ -129,83 +113,77 @@ public class GameController : MonoBehaviour
 
         population = newPopulation;
 
+
         for (int i = 0; i < numCars; i++)
         {
-            cars[i].gameObject.GetComponent<CarController>().ResetNetwork(population[i]);
+            GameObject.Destroy(cars[i]);
+        }
+        cars.Clear();
 
+        for (int i = 0; i < numCars; i++)
+        {
+            var car = GameObject.Instantiate(carPrefab, Vector3.zero, Quaternion.identity);
+            car.GetComponent<CarController>().network = population[i];
+            cars.Add(car);
         }
 
+        //for (int i = 0; i < numCars; i++)
+        //cars[i].gameObject.GetComponent<CarController>().ResetNetwork(population[i]);
     }
 
     private NeuralNet[] PickBestPopulation()
     {
         NeuralNet[] newPopulation = new NeuralNet[numCars];
-        for (int i = 0; i < bestAgentSelection; i++) {
+        for (int i = 0; i < Mathf.RoundToInt((bestSelectionPercentage / 100)  * numCars); i++) {
             newPopulation[naturallySelected] = population[i].Copy(HiddenLayerCount, HiddenNeuronCount);
             newPopulation[naturallySelected].fitness = 0;
             naturallySelected++;
-            int f = Mathf.RoundToInt(population[i].fitness * 10);
-            for (int c = 0; c < f; c++)
-                genePool.Add(i);
         }
-
-        for (int i = 0; i < worstAgentSelection; i++) {
-            int last = population.Length - 1;
-            last -= i;
-            int f = Mathf.RoundToInt(population[last].fitness * 10);
-            for (int c = 0; c < f; c++)
-                genePool.Add(last);
-        }
-
         return newPopulation;
-
     }
+
+    private void CrossWeights(Matrix<float> a, Matrix<float> b, Matrix<float> c, Func<float, float, float> func)
+    {
+        for (int x = 0; x < c.RowCount; x++)
+            for (int y = 0; y < c.ColumnCount; y++)
+                c[x, y] = func(a[x, y], b[x,y]);
+    }
+
     // look these over
     private void Crossover(NeuralNet[] newPopulation)
     {
-        for (int i = 0; i < crossOverCount; i += 2) {
-            int AIndex = i;
-            int BIndex = i + 1;
+        Func<float, float, float>[] crossover_equations =
+        {
+            (x, y)  => 0.5f * x + 0.5f * y,
+            (x, y)  => 2.0f * x - 1.0f * y,
+            (y, x)  => 2.0f * x - 1.0f * y,
+        };
 
-            if (genePool.Count >= 1) {
-                for (int l = 0; l < 100; l++) {
-                    AIndex = genePool[Random.Range(0, genePool.Count)];
-                    BIndex = genePool[Random.Range(0, genePool.Count)];
+        for (int j = 0; j < 3; ++j)
+        {
+            // cross over the two best parents 1..2 3..4 5..6 and so on
+            for (int i = 0; i < Mathf.RoundToInt((bestSelectionPercentage / 100) * numCars); i += 2)
+            {
+                int parent1 = i;
+                int parent2 = (i + 1) % Mathf.RoundToInt((bestSelectionPercentage / 100) * numCars);
 
-                    if (AIndex != BIndex)
-                        break;
+                if (parent1 > parent2) {
+                    int temp = parent1;
+                    parent1 = parent2;
+                    parent2 = temp;
                 }
+
+                //NeuralNet[] children = { new NeuralNet(), new NeuralNet() };
+                NeuralNet child = population[parent1].Copy(HiddenLayerCount, HiddenNeuronCount);
+                
+                for (int w = 0; w < child.weights.Count; w++)
+                    if (Random.Range(0.0f, 1.0f) < crossoverProbability)
+                        CrossWeights(population[parent1].weights[w], population[parent2].weights[w], child.weights[w], crossover_equations[j]);
+
+                for (int w = 0; w < child.biases.Count; w++)
+                    if (Random.Range(0.0f, 1.0f) < crossoverProbability)
+                        child.biases[w] = crossover_equations[j](population[parent1].biases[w], population[parent2].biases[w]);
             }
-
-            NeuralNet[] children = { new NeuralNet(), new NeuralNet() };
-
-            for (int j = 0; j < 2; ++j) {
-                children[j].Init(HiddenLayerCount, HiddenNeuronCount);
-                children[j].fitness = 0;
-            }
-
-            for (int w = 0; w < children[0].weights.Count; w++) {
-                if (Random.Range(0.0f, 1.0f) < 0.5f) {
-                    children[0].weights[w] = population[AIndex].weights[w];
-                    children[1].weights[w] = population[BIndex].weights[w];
-                } else {
-                    children[1].weights[w] = population[AIndex].weights[w];
-                    children[0].weights[w] = population[BIndex].weights[w];
-                }
-            }
-
-            for (int w = 0; w < children[0].biases.Count; w++) {
-                if (Random.Range(0.0f, 1.0f) < 0.5f) {
-                    children[0].biases[w] = population[AIndex].biases[w];
-                    children[1].biases[w] = population[BIndex].biases[w];
-                } else {
-                    children[1].biases[w] = population[AIndex].biases[w];
-                    children[0].biases[w] = population[BIndex].biases[w];
-                }
-            }
-
-            newPopulation[naturallySelected++] = children[0];
-            newPopulation[naturallySelected++] = children[1];
         }
     }
 
@@ -221,5 +199,34 @@ public class GameController : MonoBehaviour
             }
         }
     }
-
 }
+
+/*
+            for (int j = 0; j < 2; ++j) {
+                children[j].Init(HiddenLayerCount, HiddenNeuronCount);
+                children[j].fitness = 0;
+            }
+            
+            for (int w = 0; w < children[0].weights.Count; w++) {
+                if (Random.Range(0.0f, 1.0f) < crossoverProbability) {
+                    children[0].weights[w] = population[Parent1].weights[w];
+                    children[1].weights[w] = population[Parent2].weights[w];
+                } else {
+                    children[0].weights[w] = population[Parent2].weights[w];
+                    children[1].weights[w] = population[Parent1].weights[w];
+                }
+            }
+
+            for (int w = 0; w < children[0].biases.Count; w++) {
+                if (Random.Range(0.0f, 1.0f) < crossoverProbability) {
+                    children[0].biases[w] = population[Parent1].biases[w];
+                    children[1].biases[w] = population[Parent2].biases[w];
+                } else {
+                    children[1].biases[w] = population[Parent1].biases[w];
+                    children[0].biases[w] = population[Parent2].biases[w];
+                }
+            }
+
+            newPopulation[naturallySelected++] = children[0];
+            newPopulation[naturallySelected++] = children[1];
+ */

@@ -7,18 +7,18 @@ using Random = UnityEngine.Random;
 
 public class NeuralNet : MonoBehaviour
 {
-    public Matrix<float> input = Matrix<float>.Build.Dense(1, 7);
+    public Matrix<float> inputLayer = Matrix<float>.Build.Dense(1, 7);
     public List<Matrix<float>> hiddenLayers = new List<Matrix<float>>();
-    public Matrix<float> output = Matrix<float>.Build.Dense(1, 5);
+    public Matrix<float> outputLayer = Matrix<float>.Build.Dense(1, 5);
     public List<Matrix<float>> weights = new List<Matrix<float>>();
     public List<float> biases = new List<float>();
     public float fitness = 0;
     public void Init(int countHiddenLayers, int countHiddenNeurons)
     {
         //Clear all neural layers
-        input.Clear();
+        inputLayer.Clear();
         hiddenLayers.Clear();
-        output.Clear();
+        outputLayer.Clear();
         weights.Clear();
         biases.Clear();
         // for each hidden layer initialize the required number of weights and biases
@@ -43,9 +43,9 @@ public class NeuralNet : MonoBehaviour
 
     public void InitHidden(int countHiddenLayers, int countHiddenNeurons)
     {
-        input.Clear();
+        inputLayer.Clear();
         hiddenLayers.Clear();
-        output.Clear();
+        outputLayer.Clear();
         for (int i = 0; i < countHiddenLayers + 1; i++) {
             Matrix<float> newHiddenLayer = Matrix<float>.Build.Dense(1, countHiddenNeurons);
             hiddenLayers.Add(newHiddenLayer);
@@ -80,30 +80,30 @@ public class NeuralNet : MonoBehaviour
             for (int x = 0; x < weights[i].RowCount; x++)
                 for (int y = 0; y < weights[i].ColumnCount; y++)
                 {
-                    //weights[i][x, y] = Random.Range(-100f, 100f);
-                    weights[i][x, y] = Random.Range(-1.0f, 1.0f);
+                    weights[i][x, y] = Random.Range(-100f, 100f);
+                    //weights[i][x, y] = Random.Range(-1.0f, 1.0f);
                     //Debug.Log(weights[i][x, y]);
                 }
     }
 
     public (float, float, float, float, float) Run (float a, float b, float c, float d, float e, float speed, float angularVelocityY)
     {
-        input[0, 0] = a;
-        input[0, 1] = b;
-        input[0, 2] = c;
-        input[0, 3] = d;
-        input[0, 4] = e;
-        input[0, 5] = speed;
-        input[0, 6] = angularVelocityY;
+        inputLayer[0, 0] = a;
+        inputLayer[0, 1] = b;
+        inputLayer[0, 2] = c;
+        inputLayer[0, 3] = d;
+        inputLayer[0, 4] = e;
+        inputLayer[0, 5] = speed;
+        inputLayer[0, 6] = angularVelocityY;
 
-        input = input.PointwiseTanh();
-        hiddenLayers[0] = ((input * weights[0]) + biases[0]).PointwiseTanh();
+        inputLayer = inputLayer.PointwiseTanh();
+        hiddenLayers[0] = ((inputLayer * weights[0]) + biases[0]).PointwiseTanh();
         for (int i = 1; i < hiddenLayers.Count; i++)
             hiddenLayers[i] = ((hiddenLayers[i - 1] * weights[i]) + biases[i]).PointwiseTanh();
-        output = ((hiddenLayers[hiddenLayers.Count - 1] * weights[weights.Count - 1]) + biases[biases.Count - 1]).PointwiseTanh();
+        outputLayer = ((hiddenLayers[hiddenLayers.Count - 1] * weights[weights.Count - 1]) + biases[biases.Count - 1]).PointwiseTanh();
         Func<float, float> Sigmoid = (x) => (1f / (1 + Mathf.Exp(-x)));
         //Left, Right, Forwards, Backwards, Brake
-        return (Sigmoid(output[0, 0]), Sigmoid(output[0, 1]), Sigmoid(output[0, 2]), Sigmoid(output[0, 3]), Sigmoid(output[0, 4]));
+        return (Sigmoid(outputLayer[0, 0]), Sigmoid(outputLayer[0, 1]), Sigmoid(outputLayer[0, 2]), Sigmoid(outputLayer[0, 3]), Sigmoid(outputLayer[0, 4]));
     }
 
 }
