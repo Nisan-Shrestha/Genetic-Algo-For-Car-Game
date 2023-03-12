@@ -134,7 +134,9 @@ public class GameController : MonoBehaviour
     private NeuralNet[] PickBestPopulation()
     {
         NeuralNet[] newPopulation = new NeuralNet[numCars];
-        for (int i = 0; i < Mathf.RoundToInt((bestSelectionPercentage / 100)  * numCars); i++) {
+        int bestPopulationCount = Mathf.RoundToInt((bestSelectionPercentage / 100.0f) * numCars);
+        Debug.Log($"Picking the best: {bestPopulationCount}");
+        for (int i = 0; i < bestPopulationCount; i++) {
             newPopulation[naturallySelected] = population[i].Copy(HiddenLayerCount, HiddenNeuronCount);
             newPopulation[naturallySelected].fitness = 0;
             naturallySelected++;
@@ -183,7 +185,10 @@ public class GameController : MonoBehaviour
                 for (int w = 0; w < child.biases.Count; w++)
                     if (Random.Range(0.0f, 1.0f) < crossoverProbability)
                         child.biases[w] = crossover_equations[j](population[parent1].biases[w], population[parent2].biases[w]);
+                
+                newPopulation[naturallySelected++] = child;
             }
+
         }
     }
 

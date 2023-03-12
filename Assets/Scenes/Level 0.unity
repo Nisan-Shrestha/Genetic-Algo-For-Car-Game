@@ -1377,15 +1377,15 @@ MonoBehaviour:
   - {fileID: 2113033592}
   - {fileID: 1865959980}
   startingPoint: {fileID: 305687070}
-  numCars: 25
+  crossoverProbability: 0.5
+  numCars: 100
   HiddenLayerCount: 3
   HiddenNeuronCount: 7
   carPrefab: {fileID: 3311311803080157842, guid: 133308cdb8794744caaef026bde9e1f0, type: 3}
   mutationRate: 0.069
   currentGeneration: 0
-  bestAgentSelection: 8
-  worstAgentSelection: 3
-  crossOverCount: 10
+  bestSelectionPercentage: 25
+  LifeTime: 7
 --- !u!1001 &1288421987
 PrefabInstance:
   m_ObjectHideFlags: 0
