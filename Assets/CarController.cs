@@ -27,7 +27,9 @@ public class CarController : MonoBehaviour
     private WayPoints startWaypoint;
     private List<Collider> wpColliders = new List<Collider>();
     public float score = 0f;
-   
+
+    public bool dead = false;
+
     [SerializeField] private float motorForce;
     [SerializeField] private float breakForce;
     [SerializeField] private float maxSteerAngle;
@@ -51,16 +53,16 @@ public class CarController : MonoBehaviour
 
     private float sensorL, sensorFL, sensorF, sensorFR, sensorR;
 
-    public int HiddenLayerCount = 1;
-    public int HiddenNeuronCount = 10;
 
     public bool UserController;
 
+    private float startedAt;
+    private const float LIFETIME = 5.0f;
     private void Awake()
     {
+        startedAt = Time.time;
         network = GetComponent<NeuralNet>();
-
-        network.Init(HiddenLayerCount, HiddenNeuronCount);
+        //network.Init(HiddenLayerCount, HiddenNeuronCount);
     }
 
     private void Start()
@@ -98,6 +100,8 @@ public class CarController : MonoBehaviour
         UpdateWheels();
         UpdateScore();
        
+        if (Time.time - startedAt >= LIFETIME)
+            dead = true;
     }
 
 
@@ -114,13 +118,21 @@ public class CarController : MonoBehaviour
             waypoints.RemoveAt(0);
         }
     }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        // maybe delete them later?
+        dead = true;
+        //Debug.Log("KILLLEEEEEEEDDDDDDDDDD");
+    }
+
     private void UpdateScore()
     {
         float dist = Vector3.Distance(this.transform.position, waypoints[0].transform.position);
         float distBetWP = Vector3.Distance(startWaypoint.transform.position, waypoints[0].transform.position);
         //Debug.Log(distBetWP + " " + dist);
         score = (distBetWP - dist) + WPpassed * WPScore;
-        Debug.Log(score);
+        //Debug.Log(score);
     }
 
     private void HandleInput()

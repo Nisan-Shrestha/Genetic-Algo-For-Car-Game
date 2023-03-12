@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class WayPoints : MonoBehaviour
@@ -11,8 +9,3 @@ public class WayPoints : MonoBehaviour
         Gizmos.DrawSphere(transform.position, 1);
     }
 }
-
-
-
-
-    

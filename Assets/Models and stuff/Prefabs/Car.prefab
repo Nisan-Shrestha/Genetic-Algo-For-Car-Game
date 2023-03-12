@@ -516,6 +516,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   score: 0
+  dead: 0
   motorForce: 2500
   breakForce: 3000
   maxSteerAngle: 15
@@ -528,9 +529,9 @@ MonoBehaviour:
   rearLeftWheelTransform: {fileID: 9188640840458259854}
   rearRightWheelTransform: {fileID: 28636839611146925}
   WPScore: 20
-  HiddenLayerCount: 2
-  HiddenNeuronCount: 6
-  UserController: 1
+  HiddenLayerCount: 3
+  HiddenNeuronCount: 7
+  UserController: 0
 --- !u!114 &7087762944988224925
 MonoBehaviour:
   m_ObjectHideFlags: 0
