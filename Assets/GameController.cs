@@ -7,25 +7,26 @@ using Random = UnityEngine.Random;
 
 public class GameController : MonoBehaviour
 {
+    [SerializeField] public Material bestCarMat;
     [SerializeField] public WayPoints[] waypoints;
     [SerializeField] public WayPoints startingPoint;
 
     [SerializeField] public float crossoverProbability = 0.1f;
 
-    public int numCars = 25;
+    
 
     public int HiddenLayerCount = 3;
     public int HiddenNeuronCount = 7;
     
     private NeuralNet[] population;
-
     public GameObject carPrefab;
 
     public float mutationRate = 0.069f;
-
     public int currentGeneration = 0;
-    
-    private int naturallySelected = 0;
+
+
+    public int numCars = 25;
+    [SerializeField]     private int naturallySelected = 0;
 
     [Range(0, 100)]
     public int bestSelectionPercentage = 20;
@@ -69,7 +70,7 @@ public class GameController : MonoBehaviour
             int randomRow = Random.Range(0, result.RowCount);
             int randomColumn = Random.Range(0, result.ColumnCount);
             if (Random.Range(0.0f, 1.0f) < mutationRate)
-                result[randomRow, randomColumn] = Mathf.Clamp(result[randomRow, randomColumn] + Random.Range(-1f, 1f) , -500f, 500f);
+                result[randomRow, randomColumn] = Mathf.Clamp(result[randomRow, randomColumn] + Random.Range(-.5f, .5f) , -100f, 100f);
         }
         return result;
     }
@@ -100,6 +101,11 @@ public class GameController : MonoBehaviour
         for (int i = 0; i < numCars; i++)
         {
             population[i].fitness = cars[i].GetComponent<CarController>().score;
+            if (population[i].fitness<0)
+            {
+                population[i] = new NeuralNet();
+                population[i].Init(HiddenLayerCount,HiddenNeuronCount);
+            }
         }
 
         SortPopulation();
@@ -124,7 +130,13 @@ public class GameController : MonoBehaviour
         {
             var car = GameObject.Instantiate(carPrefab, Vector3.zero, Quaternion.identity);
             car.GetComponent<CarController>().network = population[i];
+            if (i<5)
+            {
+
+            car.GetComponentInChildren<MeshRenderer>().material = bestCarMat;
+            }
             cars.Add(car);
+            
         }
 
         //for (int i = 0; i < numCars; i++)
@@ -141,6 +153,7 @@ public class GameController : MonoBehaviour
             newPopulation[naturallySelected].fitness = 0;
             naturallySelected++;
         }
+        Debug.Log("Best Selected = " + naturallySelected +" "+ bestPopulationCount);
         return newPopulation;
     }
 
@@ -164,10 +177,12 @@ public class GameController : MonoBehaviour
         for (int j = 0; j < 3; ++j)
         {
             // cross over the two best parents 1..2 3..4 5..6 and so on
-            for (int i = 0; i < Mathf.RoundToInt((bestSelectionPercentage / 100) * numCars); i += 2)
+            for (int i = 0; i < Mathf.RoundToInt((bestSelectionPercentage / 100.0f) * numCars); i += 1)
             {
+                if (naturallySelected > (numCars -1))
+                    break;
                 int parent1 = i;
-                int parent2 = (i + 1) % Mathf.RoundToInt((bestSelectionPercentage / 100) * numCars);
+                int parent2 = (i + 1) % Mathf.RoundToInt((bestSelectionPercentage / 100.0f) * numCars);
 
                 if (parent1 > parent2) {
                     int temp = parent1;
@@ -185,11 +200,14 @@ public class GameController : MonoBehaviour
                 for (int w = 0; w < child.biases.Count; w++)
                     if (Random.Range(0.0f, 1.0f) < crossoverProbability)
                         child.biases[w] = crossover_equations[j](population[parent1].biases[w], population[parent2].biases[w]);
-                
-                newPopulation[naturallySelected++] = child;
+                Debug.Log("Crossover selection");
+                newPopulation[naturallySelected] = child;
+                naturallySelected++;
             }
 
         }
+        Debug.Log("Crossover Selected = " + (naturallySelected - Mathf.RoundToInt((bestSelectionPercentage / 100.0f) * numCars)));
+
     }
 
     private void SortPopulation()

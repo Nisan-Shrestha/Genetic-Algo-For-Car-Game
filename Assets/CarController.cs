@@ -135,6 +135,8 @@ public class CarController : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         // maybe delete them later?
+        if (!dead)
+            score -= 20;
         dead = true;
         //Debug.Log("KILLLEEEEEEEDDDDDDDDDD");
     }
@@ -186,7 +188,7 @@ public class CarController : MonoBehaviour
         {
             
             //Debug.Log(hit.distance, hit.rigidbody);
-            sensor = hit.distance / 50;  // need to test this value, done to normalize between 0 and 1
+            sensor =  Mathf.Sqrt( hit.distance);  // need to test this value, done to normalize between 0 and 1
             Debug.DrawLine(r.origin, hit.point, Color.red);
         }
         return (striked, sensor);

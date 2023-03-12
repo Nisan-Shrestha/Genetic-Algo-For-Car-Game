@@ -80,7 +80,7 @@ public class NeuralNet : MonoBehaviour
             for (int x = 0; x < weights[i].RowCount; x++)
                 for (int y = 0; y < weights[i].ColumnCount; y++)
                 {
-                    weights[i][x, y] = Random.Range(-100f, 100f);
+                    weights[i][x, y] = Random.Range(-5f, 5f);
                     //weights[i][x, y] = Random.Range(-1.0f, 1.0f);
                     //Debug.Log(weights[i][x, y]);
                 }
@@ -94,9 +94,9 @@ public class NeuralNet : MonoBehaviour
         inputLayer[0, 3] = d;
         inputLayer[0, 4] = e;
         inputLayer[0, 5] = speed;
-        inputLayer[0, 6] = angularVelocityY;
+        inputLayer[0, 6] = 1;
 
-        inputLayer = inputLayer.PointwiseTanh();
+        //inputLayer = inputLayer.PointwiseTanh();
         hiddenLayers[0] = ((inputLayer * weights[0]) + biases[0]).PointwiseTanh();
         for (int i = 1; i < hiddenLayers.Count; i++)
             hiddenLayers[i] = ((hiddenLayers[i - 1] * weights[i]) + biases[i]).PointwiseTanh();
