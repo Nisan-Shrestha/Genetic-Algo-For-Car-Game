@@ -98,7 +98,7 @@ public class GameController : MonoBehaviour
 
         // repopulate if all are either dead or have exceeded their lifetime
 
-        if (Time.time - startTime >= LifeTime)
+        if ((Time.time - startTime >= LifeTime) || (cars.FindAll(x => x.GetComponent<CarController>().dead == true).Count == numCars))
         {
             Repopulate();
         }
@@ -160,7 +160,7 @@ public class GameController : MonoBehaviour
         return newPopulation;
 
     }
-
+    // look these over
     private void Crossover(NeuralNet[] newPopulation)
     {
         for (int i = 0; i < crossOverCount; i += 2) {

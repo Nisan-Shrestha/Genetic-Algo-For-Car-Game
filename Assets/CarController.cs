@@ -86,6 +86,8 @@ public class CarController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (dead) 
+            return;
         if (waypoints.Count() ==0)
         {
             currentbreakForce = breakForce/5;
