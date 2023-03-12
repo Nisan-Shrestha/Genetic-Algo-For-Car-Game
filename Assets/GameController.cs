@@ -34,11 +34,13 @@ public class GameController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        population= new NeuralNet[numCars];
+        population = new NeuralNet[numCars];
         RandomizePopulation(population, 0);
         for (int i = 0; i < numCars; i++)
         {
-            cars.Append(GameObject.Instantiate(carPrefab, Vector3.zero, Quaternion.identity));
+            var car = GameObject.Instantiate(carPrefab, Vector3.zero, Quaternion.identity);
+            car.GetComponent<CarController>().network = population[i];
+            cars.Append(car);
             //cars[i].transform.position = startingPoint.transform.position;
         }
         //for (int i = 0; i < waypoints.Length; i++)

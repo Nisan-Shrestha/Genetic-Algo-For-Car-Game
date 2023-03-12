@@ -9,7 +9,7 @@ using UnityEngine;
 [RequireComponent(typeof(NeuralNet))]
 public class CarController : MonoBehaviour
 {
-    private NeuralNet network;
+    public NeuralNet network;
 
     private const string HORIZONTAL = "Horizontal";
     private const string VERTICAL = "Vertical";

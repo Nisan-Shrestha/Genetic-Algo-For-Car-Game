@@ -96,16 +96,12 @@ public class NeuralNet : MonoBehaviour
         input[0, 5] = speed;
         input[0, 6] = angularVelocityY;
 
-        Func<float, float> Sigmoid = (x) => (1f / (1 + Mathf.Exp(-x)));
-        //Left, Right, Forwards, Backwards, Brake
-        return (Sigmoid(output[0, 0]), Sigmoid(output[0, 1]), Sigmoid(output[0, 2]), Sigmoid(output[0, 3]), Sigmoid(output[0, 4]));
-
         input = input.PointwiseTanh();
         hiddenLayers[0] = ((input * weights[0]) + biases[0]).PointwiseTanh();
         for (int i = 1; i < hiddenLayers.Count; i++)
             hiddenLayers[i] = ((hiddenLayers[i - 1] * weights[i]) + biases[i]).PointwiseTanh();
         output = ((hiddenLayers[hiddenLayers.Count - 1] * weights[weights.Count - 1]) + biases[biases.Count - 1]).PointwiseTanh();
-        //Func<float, float> Sigmoid = (x) => (1f / (1 + Mathf.Exp(-x)));
+        Func<float, float> Sigmoid = (x) => (1f / (1 + Mathf.Exp(-x)));
         //Left, Right, Forwards, Backwards, Brake
         return (Sigmoid(output[0, 0]), Sigmoid(output[0, 1]), Sigmoid(output[0, 2]), Sigmoid(output[0, 3]), Sigmoid(output[0, 4]));
     }
