@@ -2,6 +2,7 @@ using MathNet.Numerics;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -13,6 +14,7 @@ public class CarController : MonoBehaviour
     private const string HORIZONTAL = "Horizontal";
     private const string VERTICAL = "Vertical";
 
+    private int WPpassed = 0;
     private float horizontalInput;
     private float verticalInput;
     private float speed;
@@ -21,11 +23,15 @@ public class CarController : MonoBehaviour
     private float currentbreakForce;
     private bool isBreaking;
 
-    private Transform[] waypoints;
-
+    private List<WayPoints> waypoints;
+    private WayPoints startWaypoint;
+    private List<Collider> wpColliders = new List<Collider>();
+    public float score = 0f;
+   
     [SerializeField] private float motorForce;
     [SerializeField] private float breakForce;
     [SerializeField] private float maxSteerAngle;
+
 
     [SerializeField] private WheelCollider frontLeftWheelCollider;
     [SerializeField] private WheelCollider frontRightWheelCollider;
@@ -37,7 +43,11 @@ public class CarController : MonoBehaviour
     [SerializeField] private Transform rearLeftWheelTransform;
     [SerializeField] private Transform rearRightWheelTransform;
 
+    [SerializeField] private int WPScore = 5;
+
+
     private Rigidbody myRB;
+    private BoxCollider myCollider;
 
     private float sensorL, sensorFL, sensorF, sensorFR, sensorR;
 
@@ -57,18 +67,26 @@ public class CarController : MonoBehaviour
     {
         myRB= this.GetComponent<Rigidbody>();
         myRB.centerOfMass -= new Vector3(0, .2f, 0);
-
+        myCollider = this.GetComponent<BoxCollider>();
         var Gc = FindObjectOfType<GameController>();
         while (Gc.waypoints.Length == 0) ;
-        waypoints = Gc.waypoints;
+        waypoints = Gc.waypoints.ToList();
+        startWaypoint = Gc.startingPoint;
+        for (int i = 0; i < waypoints.Count(); i++)
+        {
+            var wpc = waypoints[i].GetComponent<Collider>();
+            
+            wpColliders.Add(wpc);
 
-//        for (int i = 0; i < waypoints.Length; i++)
-            //Debug.Log(waypoints[i].position);
-        
+        }
     }
 
     private void FixedUpdate()
     {
+        if (waypoints.Count() ==0)
+        {
+            return;
+        }
         if (UserController)
             GetInput();
         else
@@ -76,6 +94,31 @@ public class CarController : MonoBehaviour
         HandleMotor();
         HandleSteering();
         UpdateWheels();
+        UpdateScore();
+       
+    }
+
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (wpColliders.Count() == 0)
+            return;
+        if (other.GetInstanceID() == wpColliders[0].GetInstanceID())
+        {
+            WPpassed += 1;
+            //Debug.Log("WP:" + waypoints[0].name + "reached. Score:" + score);
+            wpColliders.RemoveAt(0);
+            startWaypoint = waypoints[0];
+            waypoints.RemoveAt(0);
+        }
+    }
+    private void UpdateScore()
+    {
+        float dist = Vector3.Distance(this.transform.position, waypoints[0].transform.position);
+        float distBetWP = Vector3.Distance(startWaypoint.transform.position, waypoints[0].transform.position);
+        //Debug.Log(distBetWP + " " + dist);
+        score = (distBetWP - dist) + WPpassed * WPScore;
+        Debug.Log(score);
     }
 
     private void HandleInput()

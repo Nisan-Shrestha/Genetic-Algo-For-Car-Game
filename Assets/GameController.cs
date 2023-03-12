@@ -8,7 +8,8 @@ using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
-    [SerializeField] public Transform [] waypoints;
+    [SerializeField] public WayPoints[] waypoints;
+    [SerializeField] public WayPoints startingPoint;
     // Start is called before the first frame update
     void Start()
     {
