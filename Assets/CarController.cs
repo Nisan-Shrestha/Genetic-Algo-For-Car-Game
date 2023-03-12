@@ -85,6 +85,8 @@ public class CarController : MonoBehaviour
     {
         if (waypoints.Count() ==0)
         {
+            currentbreakForce = breakForce/5;
+            ApplyBreaking();
             return;
         }
         if (UserController)
