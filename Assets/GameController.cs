@@ -2,6 +2,7 @@ using MathNet.Numerics.LinearAlgebra;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 using static Unity.VisualScripting.Metadata;
 
 public class GameController : MonoBehaviour
@@ -30,6 +31,11 @@ public class GameController : MonoBehaviour
 
     private List<int> genePool = new List<int>();
 
+    [Range(5.0f, 120.0f)]
+    public float LifeTime = 30.0f;
+
+    private float startTime;
+    
     private List<GameObject> cars = new List<GameObject>();
     // Start is called before the first frame update
     void Start()
@@ -40,9 +46,10 @@ public class GameController : MonoBehaviour
         {
             var car = GameObject.Instantiate(carPrefab, Vector3.zero, Quaternion.identity);
             car.GetComponent<CarController>().network = population[i];
-            cars.Append(car);
+            cars.Add(car);
             //cars[i].transform.position = startingPoint.transform.position;
         }
+        startTime = Time.time;
         //for (int i = 0; i < waypoints.Length; i++)
         //{
         //    Debug.Log(waypoints[i]);
@@ -91,24 +98,26 @@ public class GameController : MonoBehaviour
 
         // repopulate if all are either dead or have exceeded their lifetime
 
-        int deadCarCount = 0;
-        foreach (var car in cars) {
-            deadCarCount += car.GetComponent<CarController>().dead ? 1 : 0;
-        }
-        if (deadCarCount > 0) 
-            print(deadCarCount);
-
-        if (deadCarCount == numCars) {
-            print("bruh");
+        if (Time.time - startTime >= LifeTime)
+        {
             Repopulate();
         }
+
     }
 
 
     private void Repopulate()
     {
+        startTime = Time.time;
+        genePool.Clear();
         currentGeneration++;
         naturallySelected = 0;
+
+        for (int i = 0; i < numCars; i++)
+        {
+            population[i].fitness = cars[i].GetComponent<CarController>().score;
+        }
+
         SortPopulation();
 
         NeuralNet[] newPopulation = PickBestPopulation();
@@ -120,23 +129,18 @@ public class GameController : MonoBehaviour
 
         population = newPopulation;
 
-        foreach (var car in cars)
-        {
-            GameObject.Destroy(car);
-        }
-        cars.Clear();
         for (int i = 0; i < numCars; i++)
         {
-            cars.Append(GameObject.Instantiate(carPrefab, Vector3.zero, Quaternion.identity, startingPoint.transform)); // maybe not the parent?
-            //cars[i].transform.position = startingPoint.transform.position;
+            cars[i].gameObject.GetComponent<CarController>().ResetNetwork(population[i]);
+
         }
+
     }
 
     private NeuralNet[] PickBestPopulation()
     {
         NeuralNet[] newPopulation = new NeuralNet[numCars];
         for (int i = 0; i < bestAgentSelection; i++) {
-            print(naturallySelected);
             newPopulation[naturallySelected] = population[i].Copy(HiddenLayerCount, HiddenNeuronCount);
             newPopulation[naturallySelected].fitness = 0;
             naturallySelected++;

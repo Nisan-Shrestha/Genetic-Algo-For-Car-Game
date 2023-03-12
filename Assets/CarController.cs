@@ -56,12 +56,13 @@ public class CarController : MonoBehaviour
 
     public bool UserController;
 
-    private float startedAt;
-    private const float LIFETIME = 5.0f;
+    private Vector3 initialPosition, initialRotation;
+
     private void Awake()
     {
-        startedAt = Time.time;
         network = GetComponent<NeuralNet>();
+        initialPosition = transform.position;
+        initialRotation = transform.eulerAngles;
         //network.Init(HiddenLayerCount, HiddenNeuronCount);
     }
 
@@ -100,10 +101,20 @@ public class CarController : MonoBehaviour
         UpdateWheels();
         UpdateScore();
        
-        if (Time.time - startedAt >= LIFETIME)
-            dead = true;
     }
 
+    public void ResetNetwork(NeuralNet net)
+    {
+        network = net;
+        Reset();
+    }
+
+    private void Reset()
+    {
+        score = 0;
+        transform.position = initialPosition;
+        transform.eulerAngles = initialRotation;
+    }
 
     private void OnTriggerEnter(Collider other)
     {
