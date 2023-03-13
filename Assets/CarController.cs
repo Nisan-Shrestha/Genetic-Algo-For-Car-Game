@@ -86,12 +86,25 @@ public class CarController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (dead) 
+        if (dead && !UserController)
+        {
+            horizontalInput = 0;
+            verticalInput = 0;
+            HandleMotor();
+            currentbreakForce = breakForce / 5;
+            ApplyBreaking();
             return;
+        }
         if (waypoints.Count() ==0)
         {
+            horizontalInput = 0;
+            verticalInput = 0;
+            HandleMotor();
             currentbreakForce = breakForce/5;
             ApplyBreaking();
+            var Gc = FindObjectOfType<GameController>();
+            Gc.LifeTime -= 5.0f;
+            Gc.Repopulate();
             return;
         }
         if (UserController)
@@ -136,7 +149,7 @@ public class CarController : MonoBehaviour
     {
         // maybe delete them later?
         if (!dead)
-            score -= 20;
+            score /= 4;
         dead = true;
         //Debug.Log("KILLLEEEEEEEDDDDDDDDDD");
     }
@@ -155,8 +168,8 @@ public class CarController : MonoBehaviour
         ComputeSensors();
 
         const float turnThreshold = 0.05f;
-        const float motorThreshold = .05f;
-        const float brakeThreshold = 0.6f;
+        const float motorThreshold = .001f;
+        const float brakeThreshold = 0.8f;
 
         speed = myRB.velocity.magnitude;
         angularVelocityY = myRB.angularVelocity.y;

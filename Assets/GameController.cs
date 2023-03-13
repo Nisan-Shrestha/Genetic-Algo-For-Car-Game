@@ -30,8 +30,11 @@ public class GameController : MonoBehaviour
 
     [Range(0, 100)]
     public int bestSelectionPercentage = 20;
+
+    [Range(0, 100)]
+    public int worstSelectionPercentage = 5;
     //public int crossOverPopulationPercentage = 10;
-    
+
     [Range(5.0f, 120.0f)]
     public float LifeTime = 30.0f;
 
@@ -92,10 +95,11 @@ public class GameController : MonoBehaviour
     }
 
 
-    private void Repopulate()
+    public void Repopulate()
     {
         startTime = Time.time;
         currentGeneration++;
+        LifeTime = (currentGeneration/10+1)*5;
         naturallySelected = 0;
 
         for (int i = 0; i < numCars; i++)
@@ -130,7 +134,7 @@ public class GameController : MonoBehaviour
         {
             var car = GameObject.Instantiate(carPrefab, Vector3.zero, Quaternion.identity);
             car.GetComponent<CarController>().network = population[i];
-            if (i<5)
+            if (i< Mathf.RoundToInt((bestSelectionPercentage / 100.0f) * numCars))
             {
 
             car.GetComponentInChildren<MeshRenderer>().material = bestCarMat;
@@ -147,13 +151,22 @@ public class GameController : MonoBehaviour
     {
         NeuralNet[] newPopulation = new NeuralNet[numCars];
         int bestPopulationCount = Mathf.RoundToInt((bestSelectionPercentage / 100.0f) * numCars);
+        int worstPopulationCount = Mathf.RoundToInt((worstSelectionPercentage / 100.0f) * numCars);
         Debug.Log($"Picking the best: {bestPopulationCount}");
+        //best
         for (int i = 0; i < bestPopulationCount; i++) {
             newPopulation[naturallySelected] = population[i].Copy(HiddenLayerCount, HiddenNeuronCount);
             newPopulation[naturallySelected].fitness = 0;
             naturallySelected++;
         }
-        Debug.Log("Best Selected = " + naturallySelected +" "+ bestPopulationCount);
+        //worst
+        for (int i = 0; i < (worstPopulationCount); i++)
+        {
+            newPopulation[naturallySelected] = population[numCars-1 - i].Copy(HiddenLayerCount, HiddenNeuronCount);
+            newPopulation[naturallySelected].fitness = 0;
+            naturallySelected++;
+        }
+        Debug.Log("Best Selected = " + naturallySelected +" = " + bestPopulationCount + " & " + worstPopulationCount);
         return newPopulation;
     }
 
@@ -177,12 +190,12 @@ public class GameController : MonoBehaviour
         for (int j = 0; j < 3; ++j)
         {
             // cross over the two best parents 1..2 3..4 5..6 and so on
-            for (int i = 0; i < Mathf.RoundToInt((bestSelectionPercentage / 100.0f) * numCars); i += 1)
+            for (int i = 0; i < Mathf.RoundToInt(((bestSelectionPercentage+worstSelectionPercentage )/ 100.0f) * numCars); i += 1)
             {
                 if (naturallySelected > (numCars -1))
                     break;
                 int parent1 = i;
-                int parent2 = (i + 1) % Mathf.RoundToInt((bestSelectionPercentage / 100.0f) * numCars);
+                int parent2 = (i + 1) % Mathf.RoundToInt(((bestSelectionPercentage + worstSelectionPercentage) / 100.0f) * numCars);
 
                 if (parent1 > parent2) {
                     int temp = parent1;
@@ -200,13 +213,13 @@ public class GameController : MonoBehaviour
                 for (int w = 0; w < child.biases.Count; w++)
                     if (Random.Range(0.0f, 1.0f) < crossoverProbability)
                         child.biases[w] = crossover_equations[j](population[parent1].biases[w], population[parent2].biases[w]);
-                Debug.Log("Crossover selection");
+                //Debug.Log("Crossover selection");
                 newPopulation[naturallySelected] = child;
                 naturallySelected++;
             }
 
         }
-        Debug.Log("Crossover Selected = " + (naturallySelected - Mathf.RoundToInt((bestSelectionPercentage / 100.0f) * numCars)));
+        Debug.Log("Crossover Selected = " + (naturallySelected - Mathf.RoundToInt(((bestSelectionPercentage + worstSelectionPercentage) / 100.0f) * numCars)));
 
     }
 
