@@ -3,7 +3,7 @@ using UnityEngine;
 using System;
 
 using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.Data.Text;
+//using MathNet.Numerics.Data.Text;
 using Random = UnityEngine.Random;
 
 public class NeuralNet : MonoBehaviour
@@ -77,17 +77,17 @@ public class NeuralNet : MonoBehaviour
 
     public void SaveNetwork(string prefix)
     {
-        for(int i = 0; i < weights.Count; i++)
-            DelimitedWriter.Write($"{prefix}-weights{i}.csv", weights[i], ',');
-        for (int i = 0; i < biases.Count; i++)
-            DelimitedWriter.Write($"{prefix}-biases{i}.csv", biases[i], ',');
+        //for(int i = 0; i < weights.Count; i++)
+        //    DelimitedWriter.Write($"{prefix}-weights{i}.csv", weights[i], ",");
+        //for (int i = 0; i < biases.Count; i++)
+        //    DelimitedWriter.Write($"{prefix}-biases{i}.csv", biases[i], ",");
     }
 
     public void ReadNetwork(string prefix)
     {
-        for (int i = 0; i < weights.Count; i++)
-            weights[i] = DelimitedReader.Read($"{prefix}-weights{i}.csv", delimiter : ',');
-        biases =  DelimitedReader.Read($"{prefix}-biases.csv", delimiter : ',');
+        //for (int i = 0; i < weights.Count; i++)
+        //    weights[i] = DelimitedReader.Read($"{prefix}-weights{i}.csv", delimiter : ",");
+        //biases =  DelimitedReader.Read($"{prefix}-biases.csv", delimiter : ",");
     }
 
     public void RandomizeWeights()

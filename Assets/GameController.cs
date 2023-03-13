@@ -99,6 +99,7 @@ public class GameController : MonoBehaviour
     {
         startTime = Time.time;
         currentGeneration++;
+        LifeTime = (currentGeneration/10+1)*5;
         naturallySelected = 0;
 
         for (int i = 0; i < numCars; i++)
@@ -152,12 +153,13 @@ public class GameController : MonoBehaviour
         int bestPopulationCount = Mathf.RoundToInt((bestSelectionPercentage / 100.0f) * numCars);
         int worstPopulationCount = Mathf.RoundToInt((worstSelectionPercentage / 100.0f) * numCars);
         Debug.Log($"Picking the best: {bestPopulationCount}");
+        //best
         for (int i = 0; i < bestPopulationCount; i++) {
             newPopulation[naturallySelected] = population[i].Copy(HiddenLayerCount, HiddenNeuronCount);
             newPopulation[naturallySelected].fitness = 0;
             naturallySelected++;
         }
-
+        //worst
         for (int i = 0; i < (worstPopulationCount); i++)
         {
             newPopulation[naturallySelected] = population[numCars-1 - i].Copy(HiddenLayerCount, HiddenNeuronCount);
@@ -188,12 +190,12 @@ public class GameController : MonoBehaviour
         for (int j = 0; j < 3; ++j)
         {
             // cross over the two best parents 1..2 3..4 5..6 and so on
-            for (int i = 0; i < Mathf.RoundToInt((bestSelectionPercentage / 100.0f) * numCars); i += 1)
+            for (int i = 0; i < Mathf.RoundToInt(((bestSelectionPercentage+worstSelectionPercentage )/ 100.0f) * numCars); i += 1)
             {
                 if (naturallySelected > (numCars -1))
                     break;
                 int parent1 = i;
-                int parent2 = (i + 1) % Mathf.RoundToInt((bestSelectionPercentage / 100.0f) * numCars);
+                int parent2 = (i + 1) % Mathf.RoundToInt(((bestSelectionPercentage + worstSelectionPercentage) / 100.0f) * numCars);
 
                 if (parent1 > parent2) {
                     int temp = parent1;
@@ -217,7 +219,7 @@ public class GameController : MonoBehaviour
             }
 
         }
-        Debug.Log("Crossover Selected = " + (naturallySelected - Mathf.RoundToInt((bestSelectionPercentage / 100.0f) * numCars)));
+        Debug.Log("Crossover Selected = " + (naturallySelected - Mathf.RoundToInt(((bestSelectionPercentage + worstSelectionPercentage) / 100.0f) * numCars)));
 
     }
 

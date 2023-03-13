@@ -149,7 +149,7 @@ public class CarController : MonoBehaviour
     {
         // maybe delete them later?
         if (!dead)
-            score -= 20;
+            score /= 4;
         dead = true;
         //Debug.Log("KILLLEEEEEEEDDDDDDDDDD");
     }
