@@ -1201,8 +1201,8 @@ Transform:
   - {fileID: 114580250}
   - {fileID: 1354150939}
   - {fileID: 1992721289}
-  - {fileID: 167417234}
   - {fileID: 305499980}
+  - {fileID: 167417234}
   m_Father: {fileID: 768096420}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1439,17 +1439,21 @@ MonoBehaviour:
   - {fileID: 2113033592}
   - {fileID: 1865959980}
   startingPoint: {fileID: 305687070}
-  crossoverProbability: 0.5
   HiddenLayerCount: 2
   HiddenNeuronCount: 8
   carPrefab: {fileID: 3311311803080157842, guid: 133308cdb8794744caaef026bde9e1f0, type: 3}
-  mutationRate: 0.1
-  currentGeneration: 0
-  numCars: 80
-  naturallySelected: 0
-  bestSelectionPercentage: 20
-  worstSelectionPercentage: 5
+  crossoverProbability: 0.95
+  mutationRate: 0.01
+  numCars: 40
+  bestSelectionPercentage: 18
+  worstSelectionPercentage: 3
   LifeTime: 5
+  spedup: 1
+  naturallySelected: 0
+  currentGeneration: 0
+  LastGenBestAvgScore: 0
+  LastGenBestScore: 0
+  completionTime: -1
 --- !u!1001 &1288421987
 PrefabInstance:
   m_ObjectHideFlags: 0

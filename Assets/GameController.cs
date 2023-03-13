@@ -3,47 +3,51 @@ using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using System.IO;
+
 using Random = UnityEngine.Random;
 
 public class GameController : MonoBehaviour
 {
+    string filename = "";
+    private float startTime;
+    private NeuralNet[] population;
+    private List<GameObject> cars = new List<GameObject>();
+    
     [SerializeField] public Material bestCarMat;
     [SerializeField] public WayPoints[] waypoints;
     [SerializeField] public WayPoints startingPoint;
-
-    [SerializeField] public float crossoverProbability = 0.1f;
-
     
-
     public int HiddenLayerCount = 3;
     public int HiddenNeuronCount = 7;
     
-    private NeuralNet[] population;
     public GameObject carPrefab;
 
-    public float mutationRate = 0.069f;
-    public int currentGeneration = 0;
-
-
-    public int numCars = 25;
-    [SerializeField]     private int naturallySelected = 0;
-
+    [SerializeField] public float crossoverProbability = 0.1f;
+    [SerializeField] public float mutationRate = 0.069f;
+    [SerializeField] public int numCars = 25;
     [Range(0, 100)]
     public int bestSelectionPercentage = 20;
-
     [Range(0, 100)]
     public int worstSelectionPercentage = 5;
-    //public int crossOverPopulationPercentage = 10;
-
-    [Range(5.0f, 120.0f)]
+    [Range(5.0f, 360.0f)]
     public float LifeTime = 30.0f;
-
-    private float startTime;
+    [SerializeField] bool spedup = false;
     
-    private List<GameObject> cars = new List<GameObject>();
+    public int naturallySelected = 0;
+
+    public int currentGeneration = 0;
+    public float LastGenBestAvgScore = 0.0f;
+    public float LastGenBestScore = 0.0f;
+    public float completionTime = -1.0f;
+    
     // Start is called before the first frame update
     void Start()
     {
+        filename = Application.dataPath + "/f2.csv";
+        TextWriter tw = new StreamWriter(filename,false);
+        tw.WriteLine("Gen, Top10AvgScore, TopScore, completionTime");
+        tw.Close();
         population = new NeuralNet[numCars];
         RandomizePopulation(population, 0);
         for (int i = 0; i < numCars; i++)
@@ -56,6 +60,24 @@ public class GameController : MonoBehaviour
         startTime = Time.time;
     }
 
+    void Update()
+    {
+        if (spedup)
+            Time.timeScale = 4.0f;
+        else
+            Time.timeScale = 1.0f;
+        if ((Time.time - startTime >= LifeTime) || (cars.FindAll(x => x.GetComponent<CarController>().dead == true).Count == numCars))
+            Repopulate();
+    }
+
+    public void PrintCompletionTime()
+    {
+        Debug.Log("A car completed the course in: " + (Time.time - startTime) + " seconds.");
+        completionTime = Time.time - startTime;
+        waypoints[waypoints.Length - 1].enabled= false;
+        Repopulate();
+    }
+
     private void RandomizePopulation(NeuralNet[] newPopulation, int startingIndex)
     {
         while (startingIndex < numCars) {
@@ -65,41 +87,25 @@ public class GameController : MonoBehaviour
         }
     }
 
-    Matrix<float> MutateMatrix(Matrix<float> matrix)
-    {
-        int pointsToMutateCount = Random.Range(1, (matrix.RowCount * matrix.ColumnCount) / 7); // test the value
-        Matrix<float> result = matrix;
-        for (int i = 0; i < pointsToMutateCount; i++) {
-            int randomRow = Random.Range(0, result.RowCount);
-            int randomColumn = Random.Range(0, result.ColumnCount);
-            if (Random.Range(0.0f, 1.0f) < mutationRate)
-                result[randomRow, randomColumn] = Mathf.Clamp(result[randomRow, randomColumn] + Random.Range(-.5f, .5f) , -100f, 100f);
-        }
-        return result;
-    }
-
-    private void Mutate(NeuralNet[] newPopulation)
-    {
-        for (int i = 0; i < naturallySelected; i++) {
-            for (int c = 0; c < newPopulation[i].weights.Count; c++) {
-                newPopulation[i].weights[c] = MutateMatrix(newPopulation[i].weights[c]);
-            }
-        }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if ((Time.time - startTime >= LifeTime) || (cars.FindAll(x => x.GetComponent<CarController>().dead == true).Count == numCars))
-            Repopulate();
-    }
-
-
+    
     public void Repopulate()
     {
         startTime = Time.time;
         currentGeneration++;
-        LifeTime = (currentGeneration/10+1)*5;
+        //if (currentGeneration == 30)
+        //{
+        //    LifeTime = 30.0f;
+        //}
+        if (currentGeneration <= 7)
+            LifeTime = 5f;
+        else
+            LifeTime = (currentGeneration / 7 + 1) * 5f;
+
+        //LifeTime = ;
+        if (completionTime!=-1)
+        {
+            LifeTime = completionTime+2f;
+        }
         naturallySelected = 0;
 
         for (int i = 0; i < numCars; i++)
@@ -113,7 +119,7 @@ public class GameController : MonoBehaviour
         }
 
         SortPopulation();
-
+        PrintTopScore();
         NeuralNet[] newPopulation = PickBestPopulation();
 
         Crossover(newPopulation);
@@ -142,11 +148,28 @@ public class GameController : MonoBehaviour
             cars.Add(car);
             
         }
+        waypoints[waypoints.Length - 1].enabled = true;
 
         //for (int i = 0; i < numCars; i++)
         //cars[i].gameObject.GetComponent<CarController>().ResetNetwork(population[i]);
     }
 
+    private void PrintTopScore()
+    {
+        LastGenBestAvgScore = 0;
+        for (int i = 0; i < Mathf.RoundToInt(.1f* numCars) ; i++)
+        {
+            LastGenBestAvgScore += population[i].fitness;
+        }
+        LastGenBestAvgScore /= Mathf.RoundToInt(.1f * numCars);
+        LastGenBestScore = population[0].fitness;
+        
+        TextWriter tw = new StreamWriter(filename, true);
+        tw.WriteLine(currentGeneration +", " + LastGenBestAvgScore + ", " + LastGenBestScore + ", " + completionTime);
+        tw.Close();
+
+        return;
+    }
     private NeuralNet[] PickBestPopulation()
     {
         NeuralNet[] newPopulation = new NeuralNet[numCars];
@@ -221,6 +244,31 @@ public class GameController : MonoBehaviour
         }
         Debug.Log("Crossover Selected = " + (naturallySelected - Mathf.RoundToInt(((bestSelectionPercentage + worstSelectionPercentage) / 100.0f) * numCars)));
 
+    }
+
+    Matrix<float> MutateMatrix(Matrix<float> matrix)
+    {
+        int pointsToMutateCount = Random.Range(1, (matrix.RowCount * matrix.ColumnCount) / 7); // test the value
+        Matrix<float> result = matrix;
+        for (int i = 0; i < pointsToMutateCount; i++)
+        {
+            int randomRow = Random.Range(0, result.RowCount);
+            int randomColumn = Random.Range(0, result.ColumnCount);
+            if (Random.Range(0.0f, 1.0f) < mutationRate)
+                result[randomRow, randomColumn] = Mathf.Clamp(result[randomRow, randomColumn] + Random.Range(-.5f, .5f), -100f, 100f);
+        }
+        return result;
+    }
+
+    private void Mutate(NeuralNet[] newPopulation)
+    {
+        for (int i = 0; i < naturallySelected; i++)
+        {
+            for (int c = 0; c < newPopulation[i].weights.Count; c++)
+            {
+                newPopulation[i].weights[c] = MutateMatrix(newPopulation[i].weights[c]);
+            }
+        }
     }
 
     private void SortPopulation()

@@ -47,6 +47,8 @@ public class CarController : MonoBehaviour
 
     [SerializeField] private int WPScore = 5;
 
+    [SerializeField] public bool completedCourse = false; 
+
 
     private Rigidbody myRB;
     private BoxCollider myCollider;
@@ -97,14 +99,18 @@ public class CarController : MonoBehaviour
         }
         if (waypoints.Count() ==0)
         {
+            var Gc = FindObjectOfType<GameController>();
+            Gc.PrintCompletionTime();
+            Gc.LifeTime -= 5.0f;
+            Gc.Repopulate();
+            completedCourse = true;
             horizontalInput = 0;
             verticalInput = 0;
             HandleMotor();
             currentbreakForce = breakForce/5;
             ApplyBreaking();
-            var Gc = FindObjectOfType<GameController>();
-            Gc.LifeTime -= 5.0f;
-            Gc.Repopulate();
+            
+            
             return;
         }
         if (UserController)
@@ -149,7 +155,7 @@ public class CarController : MonoBehaviour
     {
         // maybe delete them later?
         if (!dead)
-            score /= 4;
+            score *= .33f;
         dead = true;
         //Debug.Log("KILLLEEEEEEEDDDDDDDDDD");
     }

@@ -3,7 +3,7 @@ using UnityEngine;
 using System;
 
 using MathNet.Numerics.LinearAlgebra;
-//using MathNet.Numerics.Data.Text;
+    
 using Random = UnityEngine.Random;
 
 public class NeuralNet : MonoBehaviour
